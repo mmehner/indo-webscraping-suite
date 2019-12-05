@@ -12,8 +12,10 @@ zdmgscrapeindex(){
     # get pdf-link-list
     mkdir -pv issues
     wget -P issues/ -i index -nc
-    grep -o "/download/pdf/[0-9]*" issues/* | sed 's_^issues/[0-9]\+:_http://menadoc.bibliothek.uni-halle.de_' >> pdfindex
-    sort pdfindex | uniq -u > pdfindex_new
+    grep -o "/download/pdf/[0-9]*" issues/* | sed 's_^issues/[0-9]\+:_http://menadoc.bibliothek.uni-halle.de_' | sort | uniq > pdfindex_tmp
+    touch pdfindex
+    diff --new-line-format="" --unchanged-line-format="" pdfindex_tmp pdfindex > pdfindex_new
+    rm pdfindex_tmp
     echo "New entries in pdfindex:"
     cat pdfindex_new
 }
@@ -25,9 +27,9 @@ zdmgscrapedlpdf(){
 	   mkdir -pv pdf
 	   wget --user-agent=Mozilla --random-wait -P pdf/ -i pdfindex_new -nc
 	   # when done: cleanup pdfindices
-	   rm pdfindex_new
-	   sort pdfindex | uniq > tmpindex
+	   cat pdfindex pdfindex_new | sort | uniq > tmpindex
 	   mv tmpindex pdfindex
+	   rm pdfindex_new
     else
 	echo "No new additions since last run; exiting."
 	exit
@@ -56,9 +58,9 @@ zdmgscrapepostdl(){
 
 # main function
 ## check when last index was created
-if [ "$(date -r pdfindex +"%Y-%m-%d")" = "$(date +"%Y-%m-%d")" ];
+if [ -f pdfindex_new ];
 then
-    read -p "Last pdfindex was created today, do you want to skip indexing and continue downloading based on the existing index? " yn
+    read -p "The last run seems to have been aborted, do you want to skip indexing and continue downloading based on the existing index? " yn
     case $yn in
 	[Yy]* ) zdmgscrapedlpdf ;;
 	[Nn]* ) zdmgscrapeindex; zdmgscrapedlpdf; ;;
