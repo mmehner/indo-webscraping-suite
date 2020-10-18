@@ -23,13 +23,13 @@ xasiascrapeindex(){
 ## download pdfs
 xasiascrapedlpdf(){
     if [ -f pdfindex_new ];
-       then
-	   mkdir -pv pdf
-	   wget --user-agent=Mozilla --random-wait -P pdf/ -i pdfindex_new -nc
-	   # when done: cleanup pdfindices
-	   cat pdfindex pdfindex_new | sort | uniq > tmpindex
-	   mv tmpindex pdfindex
-	   rm pdfindex_new
+    then
+	mkdir -pv pdf
+	wget --user-agent=Mozilla --random-wait -P pdf/ -i pdfindex_new -nc
+	# when done: cleanup pdfindices
+	cat pdfindex pdfindex_new | sort | uniq > tmpindex
+	mv tmpindex pdfindex
+	rm pdfindex_new
     else
 	echo "No new additions since last run; exiting."
 	exit
@@ -44,8 +44,10 @@ xasiascrapepostdl(){
 	sed -n '/Empfohlene Zitierweise.*/,/<\/p>/p' ${i} | sed -n '/^\s*[a-zA-Z].*/p' | sed -e 's/^\s*//g' -e 's/  \+/_/g' -e 's/ /-/g' -e 's/[\.,;:'\''\?"\/()&#]//g' -e 's/-Heidelberg--Berlin-CrossAsia-eBooks-//g' > ${i}_title
     done
 
+    find books/ -empty -delete
+
     # rename pdfs
-    for i in pdf/*;
+    for i in pdf/[0-9]*;
     do
 	mv "${i}" "pdf/$(cat $(echo ${i} | sed -n 's/^pdf\(\/[0-9]*\)-.*/books\/\1_title/p')).pdf"
     done
@@ -59,18 +61,18 @@ xasiascrapepostdl(){
 
 # main function
 ## check when last index was created
-if [ -f pdfindex_new ];
+if [ -s pdfindex_new ];
 then
     read -p "The last run seems to have been aborted, do you want to skip indexing and continue downloading based on the existing index? " yn
     case $yn in
-	[Yy]* ) xasiascrapedlpdf ;;
-	[Nn]* ) xasiacrapeindex; xasiascrapedlpdf; ;;
+	[Yy]* ) xasiascrapedlpdf; xasiascrapepostdl ;;
+	[Nn]* ) xasiacrapeindex; xasiascrapedlpdf; xasiascrapepostdl ;;
 	* ) echo "Please answer y[es] or n[o]."; exit ;;
     esac
 else
     xasiascrapeindex
     xasiascrapedlpdf
+    xasiascrapepostdl
 fi
-xasiascrapepostdl
 
 exit
