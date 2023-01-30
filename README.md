@@ -16,7 +16,7 @@ curl, wget, sed, w3m, pdftotext, pdfinfo
 - **zdmg_scrape.sh** : [Zeitschrift der Deutschen Morgenländischen Gesellschaft](http://nbn-resolving.de/urn:nbn:de:gbv:3:5-8179)
 - **idgf_scrape.sh** : [Indogermanische Forschungen](https://www.degruyter.com/view/j/indo)
 - **muktabodha_scrape.sh** : [Muktabodha Indological Text Collection and Search Engine](https://etexts.muktabodha.org/DL_CATALOG_USER_INTERFACE/dl_user_interface_frameset.htm)
-- **xasia-books_scrape.sh** : [xasia eBooks](https://crossasia-books.ub.uni-heidelberg.de/xasia/catalog/index?per_page=1000)
+- **hasp-books_scrape.sh** : [Heidelberg Asian Studies Publishing](https://hasp.ub.uni-heidelberg.de/catalog/index?per_page=1000)
 - **indology-list_scrape.sh** : [Indology List](https://list.indology.info/pipermail/indology_list.indology.info/)
 
 ## Continuing an aborted run

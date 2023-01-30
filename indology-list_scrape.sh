@@ -4,12 +4,12 @@
 
 # subroutines
 ## (over)write indices
-indolistscrapeindex(){
+getidx(){
     # get month-index
     echo "Fetching month-index"
-    curl -s https://list.indology.info/pipermail/indology_list.indology.info/ | \
+    curl -s https://list.indology.info/pipermail/indology/ | \
 	grep "/thread.htm" | \
-	sed 's_^.*<a href="\(.*\)".*_https://list.indology.info/pipermail/indology\_list.indology.info/\1_I' > monthindex
+	sed 's_^.*<a href="\(.*\)".*_https://list.indology.info/pipermail/indology/\1_I' > monthindex
 
     # get post-indix
     echo "Fetching post-index, this may take a while"
@@ -20,29 +20,33 @@ indolistscrapeindex(){
 	    grep -i "<li><a href=" |
 	    sed -e "s|^.*<a href=\"\(.*\)\".*|${l}/\1|I"  -e 's_/thread.html__g' >> postindex
     done
-    
+}
+
+getdata(){
     # diff with archive
+    sort -o postindex postindex
+    
     if [ -f dlindex ]
     then
+	sort -o dlindex dlindex
 	diff --new-line-format="" --unchanged-line-format="" postindex dlindex  > postindex_new
     else
 	cp postindex postindex_new
     fi
-}
 
-## view posts with w3m, save (thus converting char encoding) and delete replies
-indolistscrapeposts(){
+    ## view posts with w3m, save (thus converting char encoding) and delete replies
     if [ -s postindex_new ];
     then
 	mkdir -pv posts/
-	for l in $(cat postindex_new)
+	while IFS= read -r l
 	do
 	    echo "Fetching ${l}"
-	    w3m ${l} | sed '/^>/d' > posts/$(echo ${l} | sed -e 's_^.*\.info/\(.*\)\.html_\1_I' -e 's|/|_|g' )
-	done
-	rm postindex_new
-	mv postindex dlindex
+	    w3m ${l} | sed '/^>/d' > posts/$(echo ${l} | sed -e 's_^.*\.info/pipermail/indology/\(.*\)\.html_\1_I' -e 's|/|_|g' )
+	    echo "${l}" >> dlindex
+	done < postindex_new
+	rm postindex_new postindex
     else
+	rm postindex_new
 	echo "No new additions since last run; exiting."
 	exit
     fi
@@ -54,13 +58,13 @@ if [ -f postindex_new ];
 then
     read -p "The last run seems to have been aborted, do you want to skip indexing and continue downloading based on the existing index? " yn
     case $yn in
-	[Yy]* ) indolistscrapeposts ;;
-	[Nn]* ) indolistscrapeindex; indolistscrapeposts ;;
+	[Yy]* ) getdata ;;
+	[Nn]* ) getidx; getdata ;;
 	* ) echo "Please answer y[es] or n[o]."; exit ;;
     esac
 else
-    indolistscrapeindex
-    indolistscrapeposts
+    getidx
+    getdata
 fi
 
 exit
